@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Context Menu Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            min-height: 100vh;
+        }
+        .content-block {
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        #custom-context-menu {
+            position: fixed;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            min-width: 100px;
+        }
+        #custom-context-menu li {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #custom-context-menu li:hover {
+            background-color: #e6f7ff;
+        }
+        h1, h2, p {
+            user-select: none; /* Helps prevent text selection interfering with context menu */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Right Click Anywhere to Edit</h1>
+    <p class="content-block">This is a paragraph inside a content block. Try right-clicking this block.</p>
+    <div class="content-block" id="secondary-content">
+        <h2>Section Title</h2>
+        <p>Another piece of content to interact with. If you right-click this section, you will target the DIV container.</p>
+        <button>A Button Element</button>
+    </div>
+
+    <!-- Mock parentApi for demonstration -->
+    <script>
+        // Mocking parentApi. In the target environment, this object is expected to exist
+        // and handle communication with the parent frame/environment.
+        window.parentApi = {
+            prompt: (editDescription, targetElementInfo) => {
+                console.log("--- Parent API Prompt Triggered ---");
+                console.log("Requested Edit:", editDescription);
+                console.log("Target Element Details:", targetElementInfo);
+                
+                const details = `Tag: ${targetElementInfo.tagName}\nID: ${targetElementInfo.id || 'N/A'}\nClass: ${targetElementInfo.className || 'N/A'}`;
+                
+                alert(`API Call Simulated!\n\nRequested Edit: "${editDescription}"\n\nTarget Element:\n${details}`);
+            }
+        };
+    </script>
+    
+    <!-- Custom Context Menu Structure -->
+    <ul id="custom-context-menu">
+        <li id="edit-option">Edit Element</li>
+    </ul>
+
+    <script type="module" src="main.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
+
