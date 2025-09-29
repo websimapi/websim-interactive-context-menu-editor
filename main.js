@@ -12,9 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTarget = null;
 
     const resolveParentApi = () => {
-        if (window.parentApi?.navigator) return;
-        try { if (window.parent && window.parent !== window && window.parent.parentApi?.navigator) window.parentApi = window.parent.parentApi; } catch {}
-        try { if (window.top && window.top !== window && window.top.parentApi?.navigator) window.parentApi = window.top.parentApi; } catch {}
+        // Always attempt to bind the closest available parentApi with a navigator
+        let candidate = undefined;
+        try { candidate = window.parentApi?.navigator ? window.parentApi : candidate; } catch {}
+        try { candidate = window.parent && window.parent !== window && window.parent.parentApi?.navigator ? window.parent.parentApi : candidate; } catch {}
+        try { candidate = window.top && window.top !== window && window.top.parentApi?.navigator ? window.top.parentApi : candidate; } catch {}
+        if (candidate) window.parentApi = candidate;
     };
     resolveParentApi();
 
@@ -105,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 4. Implement prompt submission
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!currentTarget) return;
 
         const editDescription = editPromptInput.value.trim();
@@ -116,19 +119,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 tagName: currentTarget.tagName,
                 id: currentTarget.id || null,
                 className: currentTarget.className || null,
-                // Provide a snippet of text content for context
                 textContentSample: currentTarget.textContent ? currentTarget.textContent.trim().substring(0, 100) : ''
             };
             
-            // Use parentApi.navigator to trigger the action as requested by the user
             resolveParentApi();
-            if (window.parentApi && typeof window.parentApi.navigator === 'function') {
-                const maybePromise = window.parentApi.navigator(editDescription, targetElementInfo);
-                if (maybePromise && typeof maybePromise.then === 'function') {
-                    maybePromise.catch((err) => console.error('parentApi.navigator error:', err));
+            const api = window.parentApi;
+            if (api && typeof api.navigator === 'function') {
+                try {
+                    // Support both possible navigator signatures
+                    const result = api.navigator.length >= 2
+                        ? api.navigator(editDescription, targetElementInfo)
+                        : api.navigator({ prompt: editDescription, target: targetElementInfo });
+                    await (result && typeof result.then === 'function' ? result : Promise.resolve(result));
+                } catch (err) {
+                    console.error('parentApi.navigator invocation failed:', err);
                 }
             } else {
-                console.error("parentApi.navigator is not defined. Cannot trigger API prompt.");
+                // Try direct access on parent/top without assigning, in case of restricted globals
+                try {
+                    const fn =
+                        (window.parent && window.parent !== window && window.parent.parentApi?.navigator) ||
+                        (window.top && window.top !== window && window.top.parentApi?.navigator);
+                    if (typeof fn === 'function') {
+                        const result = fn.length >= 2
+                            ? fn(editDescription, targetElementInfo)
+                            : fn({ prompt: editDescription, target: targetElementInfo });
+                        await (result && typeof result.then === 'function' ? result : Promise.resolve(result));
+                    } else {
+                        console.error("parentApi.navigator is not available in any parent context.");
+                    }
+                } catch (err) {
+                    console.error('Failed accessing parent contexts for navigator:', err);
+                }
             }
             
             hidePromptModal();
