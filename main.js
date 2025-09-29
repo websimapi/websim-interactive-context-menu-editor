@@ -11,6 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentTarget = null;
 
+    const resolveParentApi = () => {
+        if (window.parentApi?.navigator) return;
+        try { if (window.parent && window.parent !== window && window.parent.parentApi?.navigator) window.parentApi = window.parent.parentApi; } catch {}
+        try { if (window.top && window.top !== window && window.top.parentApi?.navigator) window.parentApi = window.top.parentApi; } catch {}
+    };
+    resolveParentApi();
+
     // Function to hide the context menu
     const hideContextMenu = () => {
         contextMenu.style.display = 'none';
@@ -114,13 +121,14 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             
             // Use parentApi.navigator to trigger the action as requested by the user
-            if (window.parentApi && window.parentApi.navigator) {
-                // THIS IS THE ACTUAL CALL to the real parentApi.navigator
-                window.parentApi.navigator(editDescription, targetElementInfo);
-                console.log("Triggered parentApi.navigator:", { editDescription, targetElementInfo });
+            resolveParentApi();
+            if (window.parentApi && typeof window.parentApi.navigator === 'function') {
+                const maybePromise = window.parentApi.navigator(editDescription, targetElementInfo);
+                if (maybePromise && typeof maybePromise.then === 'function') {
+                    maybePromise.catch((err) => console.error('parentApi.navigator error:', err));
+                }
             } else {
                 console.error("parentApi.navigator is not defined. Cannot trigger API prompt.");
-                // Removed alert/simulation feedback
             }
             
             hidePromptModal();
