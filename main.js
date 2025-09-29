@@ -115,15 +115,30 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Use parentApi.navigator to trigger the action as requested by the user
             if (window.parentApi && window.parentApi.navigator) {
+                // THIS IS THE ACTUAL CALL to the real parentApi.navigator
                 window.parentApi.navigator(editDescription, targetElementInfo);
+                console.log("Triggered parentApi.navigator:", { editDescription, targetElementInfo });
             } else {
                 console.error("parentApi.navigator is not defined. Cannot trigger API prompt.");
-                alert(`Error: parentApi.navigator missing. Edit requested: ${editDescription}`);
+                // Removed alert/simulation feedback
             }
             
             hidePromptModal();
         } else {
-            alert("Please provide a description for the edit.");
+            // Provide visual feedback for empty input instead of an alert
+            editPromptInput.style.borderColor = 'red';
+            editPromptInput.focus();
+            
+            const originalPlaceholder = editPromptInput.placeholder;
+            editPromptInput.placeholder = "A description is required!";
+
+            // Reset visual cues after a short delay
+            setTimeout(() => {
+                editPromptInput.style.borderColor = '#ccc';
+                editPromptInput.placeholder = originalPlaceholder;
+            }, 1500);
+            
+            // Do not close the modal if validation fails
         }
     };
 
