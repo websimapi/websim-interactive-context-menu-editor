@@ -127,24 +127,6 @@
         <button>A Button Element</button>
     </div>
 
-    <!-- Mock parentApi for demonstration -->
-    <script>
-        // Mocking parentApi. In the target environment, this object is expected to exist
-        // and handle communication with the parent frame/environment.
-        window.parentApi = {
-            // Using 'navigator' as per user instruction, assuming it handles the AI interaction prompt.
-            navigator: (editDescription, targetElementInfo) => {
-                console.log("--- Parent API NAVIGATOR Triggered ---");
-                console.log("Requested Edit:", editDescription);
-                console.log("Target Element Details:", targetElementInfo);
-                
-                const details = `Tag: ${targetElementInfo.tagName}\nID: ${targetElementInfo.id || 'N/A'}\nClass: ${targetElementInfo.className || 'N/A'}`;
-                
-                alert(`API Call Simulated!\n\nCalled parentApi.navigator()\n\nRequested Edit: "${editDescription}"\n\nTarget Element:\n${details}`);
-            }
-        };
-    </script>
-    
     <!-- Custom Context Menu Structure -->
     <ul id="custom-context-menu">
         <li id="edit-option">Edit Element</li>
