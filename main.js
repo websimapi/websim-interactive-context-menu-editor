@@ -3,12 +3,39 @@
 document.addEventListener('DOMContentLoaded', () => {
     const contextMenu = document.getElementById('custom-context-menu');
     const editOption = document.getElementById('edit-option');
+    const promptModal = document.getElementById('prompt-modal');
+    const targetElementDisplay = document.getElementById('target-element-display');
+    const editPromptInput = document.getElementById('edit-prompt-input');
+    const submitPromptButton = document.getElementById('submit-prompt');
+    const cancelPromptButton = document.getElementById('cancel-prompt');
+
     let currentTarget = null;
 
     // Function to hide the context menu
     const hideContextMenu = () => {
         contextMenu.style.display = 'none';
+    };
+
+    // Function to hide the prompt modal
+    const hidePromptModal = () => {
+        promptModal.style.display = 'none';
+        // Clean up input and target
+        editPromptInput.value = '';
         currentTarget = null;
+    };
+
+    // Function to show the prompt modal
+    const showPromptModal = (target) => {
+        currentTarget = target;
+        
+        const tagName = currentTarget.tagName.toLowerCase();
+        const idAttr = currentTarget.id ? `#${currentTarget.id}` : '';
+        // Extract class names safely, handle elements without classes
+        const classAttr = currentTarget.className ? '.' + currentTarget.className.split(' ').filter(c => c).join('.') : '';
+        
+        targetElementDisplay.textContent = `Target: <${tagName}> ${idAttr}${classAttr}`;
+        promptModal.style.display = 'flex';
+        editPromptInput.focus();
     };
 
     // 1. Handle right-click event (contextmenu)
@@ -34,62 +61,84 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 2. Handle clicks outside the menu to hide it
+    // 2. Handle clicks outside the menu/modal to hide them
     document.addEventListener('click', (e) => {
-        // Only hide if the click did not occur on the context menu itself
-        if (!contextMenu.contains(e.target) || e.target === document.body) {
+        // Hide context menu if click is outside it
+        if (contextMenu.style.display === 'block' && !contextMenu.contains(e.target)) {
             hideContextMenu();
+        }
+        
+        // Hide prompt modal if click is on the modal background
+        if (promptModal.style.display === 'flex' && e.target === promptModal) {
+             hidePromptModal();
         }
     });
 
-    // Hide context menu if ESC is pressed
+    // Hide context menu and modal if ESC is pressed, handle Enter press for submission
     document.addEventListener('keydown', (e) => {
         if (e.key === "Escape") {
-            hideContextMenu();
+            if (promptModal.style.display === 'flex') {
+                hidePromptModal();
+            } else {
+                hideContextMenu();
+            }
+        }
+        if (e.key === "Enter" && promptModal.style.display === 'flex' && editPromptInput === document.activeElement) {
+            e.preventDefault(); // Prevent newline insertion in textarea
+            submitPromptButton.click(); // Allow submit via Enter key
         }
     });
 
-    // 3. Implement the 'Edit' action
+    // 3. Implement the 'Edit' action (Clicking the menu item)
     editOption.addEventListener('click', () => {
         hideContextMenu();
-
         if (currentTarget) {
-            const tagName = currentTarget.tagName.toLowerCase();
-            const idAttr = currentTarget.id ? ` id="${currentTarget.id}"` : '';
-
-            // Prompt the user for the edit description
-            const editDescription = window.prompt(`Editing element: <${tagName}${idAttr}>. Describe the desired edit (e.g., "Change background color to blue"):`);
-
-            if (editDescription !== null && editDescription.trim() !== '') {
-                // Prepare information about the target element
-                const targetElementInfo = {
-                    tagName: currentTarget.tagName,
-                    id: currentTarget.id || null,
-                    className: currentTarget.className || null,
-                    // Provide a snippet of text content for context
-                    textContentSample: currentTarget.textContent ? currentTarget.textContent.trim().substring(0, 100) : ''
-                };
-                
-                // Use parentApi.prompt to trigger the action
-                if (window.parentApi && window.parentApi.prompt) {
-                    window.parentApi.prompt(editDescription.trim(), targetElementInfo);
-                } else {
-                    console.error("parentApi.prompt is not defined. Cannot trigger API prompt.");
-                    alert(`Error: parentApi.prompt missing. Edit requested: ${editDescription}`);
-                }
-            } else if (editDescription === '') {
-                // User clicked OK with an empty description
-                alert("Edit cancelled: empty description provided.");
-            }
-            // If editDescription is null, user clicked Cancel, nothing happens.
+            showPromptModal(currentTarget);
         }
-        currentTarget = null;
     });
+
+    // 4. Implement prompt submission
+    const handleSubmit = () => {
+        if (!currentTarget) return;
+
+        const editDescription = editPromptInput.value.trim();
+
+        if (editDescription !== '') {
+            // Prepare information about the target element
+            const targetElementInfo = {
+                tagName: currentTarget.tagName,
+                id: currentTarget.id || null,
+                className: currentTarget.className || null,
+                // Provide a snippet of text content for context
+                textContentSample: currentTarget.textContent ? currentTarget.textContent.trim().substring(0, 100) : ''
+            };
+            
+            // Use parentApi.navigator to trigger the action as requested by the user
+            if (window.parentApi && window.parentApi.navigator) {
+                window.parentApi.navigator(editDescription, targetElementInfo);
+            } else {
+                console.error("parentApi.navigator is not defined. Cannot trigger API prompt.");
+                alert(`Error: parentApi.navigator missing. Edit requested: ${editDescription}`);
+            }
+            
+            hidePromptModal();
+        } else {
+            alert("Please provide a description for the edit.");
+        }
+    };
+
+    submitPromptButton.addEventListener('click', handleSubmit);
+    cancelPromptButton.addEventListener('click', hidePromptModal);
 
     // Prevent context menu appearing on the custom menu itself
     contextMenu.addEventListener('contextmenu', (e) => {
         e.stopPropagation();
         e.preventDefault();
     });
+    
+    // Prevent context menu appearing on the modal itself
+    promptModal.addEventListener('contextmenu', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+    });
 });
-

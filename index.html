@@ -40,6 +40,81 @@
         h1, h2, p {
             user-select: none; /* Helps prevent text selection interfering with context menu */
         }
+        
+        #prompt-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        #prompt-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        #target-element-display {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+            border-left: 3px solid #007bff;
+            padding-left: 10px;
+        }
+        
+        #edit-prompt-input {
+            width: 100%;
+            min-height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 16px;
+        }
+
+        #modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #submit-prompt {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #submit-prompt:hover {
+             background-color: #0056b3;
+        }
+
+        #cancel-prompt {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #cancel-prompt:hover {
+            background-color: #5a6268;
+        }
     </style>
 </head>
 <body>
@@ -57,14 +132,15 @@
         // Mocking parentApi. In the target environment, this object is expected to exist
         // and handle communication with the parent frame/environment.
         window.parentApi = {
-            prompt: (editDescription, targetElementInfo) => {
-                console.log("--- Parent API Prompt Triggered ---");
+            // Using 'navigator' as per user instruction, assuming it handles the AI interaction prompt.
+            navigator: (editDescription, targetElementInfo) => {
+                console.log("--- Parent API NAVIGATOR Triggered ---");
                 console.log("Requested Edit:", editDescription);
                 console.log("Target Element Details:", targetElementInfo);
                 
                 const details = `Tag: ${targetElementInfo.tagName}\nID: ${targetElementInfo.id || 'N/A'}\nClass: ${targetElementInfo.className || 'N/A'}`;
                 
-                alert(`API Call Simulated!\n\nRequested Edit: "${editDescription}"\n\nTarget Element:\n${details}`);
+                alert(`API Call Simulated!\n\nCalled parentApi.navigator()\n\nRequested Edit: "${editDescription}"\n\nTarget Element:\n${details}`);
             }
         };
     </script>
@@ -73,9 +149,21 @@
     <ul id="custom-context-menu">
         <li id="edit-option">Edit Element</li>
     </ul>
+    
+    <!-- Custom Prompt Modal UI -->
+    <div id="prompt-modal" style="display: none;">
+        <div id="prompt-content">
+            <h3>Edit Element</h3>
+            <p id="target-element-display">Target: N/A</p>
+            <textarea id="edit-prompt-input" placeholder="Describe the desired edit... (e.g., 'Change this background color to blue')"></textarea>
+            <div id="modal-actions">
+                <button id="cancel-prompt">Cancel</button>
+                <button id="submit-prompt">Submit Edit</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="main.js"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
-
